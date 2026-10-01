@@ -4,7 +4,3 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - sharp
-
-allowBuilds:
-  esbuild: false
-  sharp: false
