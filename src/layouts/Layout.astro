@@ -1,0 +1,121 @@
+---
+import '@/styles/globals.css'
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'bonk4code — Agencia de desarrollo de software a medida',
+  description = 'Desarrollamos páginas web, apps web, ERP, gestión de RR.HH., inventarios, ventas, discotecas, préstamos y comida rápida con IA y optimización de procesos.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es" suppress-hydration-warning>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://bonk4code.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Michroma&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+    <script is:inline>
+      (function () {
+        try {
+          const stored = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const theme = stored || (prefersDark ? 'dark' : 'light');
+          if (theme === 'dark') document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="font-sans antialiased">
+    <slot />
+    <script is:inline>
+      (() => {
+        const targets = Array.from(
+          document.querySelectorAll('main > section, main > div[aria-hidden="true"], footer')
+        );
+
+        if (!targets.length) return;
+
+        targets.forEach((el, index) => {
+          el.setAttribute('data-reveal', '');
+          el.style.setProperty('--reveal-delay', `${Math.min(index * 60, 240)}ms`);
+        });
+
+        if (!('IntersectionObserver' in window)) {
+          targets.forEach((el) => el.classList.add('is-visible'));
+          return;
+        }
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            });
+          },
+          {
+            threshold: 0.14,
+            rootMargin: '0px 0px -10% 0px',
+          }
+        );
+
+        targets.forEach((el) => observer.observe(el));
+      })();
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(26px) scale(0.985);
+    filter: blur(6px);
+    transition:
+      opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+      transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+      filter 0.9s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms);
+    will-change: opacity, transform, filter;
+  }
+
+  [data-reveal].is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] {
+      opacity: 1;
+      transform: none;
+      filter: none;
+      transition: none;
+    }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Michroma', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+</style>

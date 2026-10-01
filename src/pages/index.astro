@@ -1,0 +1,34 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '@/components/Navbar';
+import Hero from '@/components/Hero';
+import Services from '@/components/Services';
+import Process from '@/components/Process';
+import Tech from '@/components/Tech';
+import Testimonials from '@/components/Testimonials';
+import Pricing from '@/components/Pricing';
+import Contact from '@/components/Contact';
+import Footer from '@/components/Footer';
+import Chatbot from '@/components/Chatbot';
+import SectionDivider from '@/components/SectionDivider.astro';
+---
+
+<Layout>
+  <Navbar client:load />
+  <main>
+    <Hero />
+    <SectionDivider variant="glow" />
+    <Services />
+    <SectionDivider variant="mesh" />
+    <Process />
+    <SectionDivider variant="glow" />
+    <Tech />
+    <Testimonials />
+    <SectionDivider variant="mesh" />
+    <Pricing />
+    <SectionDivider variant="glow" />
+    <Contact client:load />
+  </main>
+  <Footer />
+  <Chatbot client:load />
+</Layout>
