@@ -24,9 +24,14 @@ export default function Footer() {
         <div className="grid gap-10 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <a href="#inicio" className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/30">
+              {/* <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white shadow-lg shadow-primary/30">
                 <Code2 className="h-5 w-5" />
-              </span>
+              </span> */}
+              <img
+                src="/b4ct.png"
+                alt="bonk4code"
+                className="h-9 w-9 rounded-xl"
+              />
               <span className="text-lg font-bold tracking-tight"
                 style={{ fontFamily: "'Michroma', sans-serif" }}>
                 bonk<span className="text-gradient">4</span>code

@@ -10,6 +10,23 @@ const {
   title = 'bonk4code — Agencia de desarrollo de software a medida',
   description = 'Desarrollamos páginas web, apps web, ERP, gestión de RR.HH., inventarios, ventas, discotecas, préstamos y comida rápida con IA y optimización de procesos.',
 } = Astro.props;
+
+const SITE = 'https://bonk4code.com';
+const canonical = new URL(Astro.url.pathname, SITE).href;
+const ogImage = `${SITE}/b4c.png`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfessionalService',
+  name: 'bonk4code',
+  url: SITE,
+  logo: ogImage,
+  image: ogImage,
+  description,
+  email: 'proyectos@bonk4code.com',
+  telephone: '+59169765666',
+  areaServed: 'LATAM',
+  inLanguage: 'es',
+};
 ---
 
 <!doctype html>
@@ -21,8 +38,18 @@ const {
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://bonk4code.com" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:site_name" content="bonk4code" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#0b0b14" />
+    <link rel="canonical" href={canonical} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,6 +58,15 @@ const {
       href="https://fonts.googleapis.com/css2?family=Michroma&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-25ERXB35MH"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-25ERXB35MH');
+    </script>
     <title>{title}</title>
     <script is:inline>
       (function () {

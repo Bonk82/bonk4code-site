@@ -180,12 +180,12 @@ export default function Contact() {
                     value={form.service}
                     onValueChange={(v) => setForm({ ...form, service: v })}
                   >
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger className="h-11 touch-manipulation">
                       <SelectValue placeholder="¿Qué necesitas?" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-[60vh]">
                       {services.map((s) => (
-                        <SelectItem key={s} value={s}>
+                        <SelectItem key={s} value={s} className="py-2.5">
                           {s}
                         </SelectItem>
                       ))}
