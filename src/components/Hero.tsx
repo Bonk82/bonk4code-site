@@ -20,8 +20,8 @@ export default function Hero() {
     <section id="inicio" className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-28">
       <div className="absolute inset-0 bg-grid opacity-40 [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]" />
       <div className="absolute inset-0 bg-radial-fade" />
-      <div className="absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-primary/30 blur-3xl animate-blob" />
-      <div className="absolute top-20 right-1/4 h-72 w-72 rounded-full bg-accent/30 blur-3xl animate-blob [animation-delay:3s]" />
+      <div className="absolute -top-24 left-1/4 hidden h-72 w-72 rounded-full bg-primary/30 blur-3xl animate-blob sm:block" />
+      <div className="absolute top-20 right-1/4 hidden h-72 w-72 rounded-full bg-accent/30 blur-3xl animate-blob [animation-delay:3s] sm:block" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">

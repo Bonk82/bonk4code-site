@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { isValidPhoneNumber } from 'libphonenumber-js/min';
 
 export const prerender = false; // necesario para que corra en el servidor
 
@@ -7,9 +8,10 @@ const esc = (s: string) =>
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { name, email, company, service, message } = await request.json();
+    const { name, email, phone, company, service, message } = await request.json();
 
-    if (!name?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !service || message?.trim().length < 10) {
+    if (!name?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !service || message?.trim().length < 10 ||
+      (phone != null && (typeof phone !== 'string' || (phone !== '' && (!phone.startsWith('+') || !isValidPhoneNumber(phone)))))) {
       return new Response(JSON.stringify({ message: 'Datos inválidos' }), { status: 400 });
     }
 
@@ -18,6 +20,7 @@ export const POST: APIRoute = async ({ request }) => {
       <h2>Nuevo proyecto — ${esc(service)}</h2>
       <p><strong>Nombre:</strong> ${esc(name)}</p>
       <p><strong>Email:</strong> ${esc(email)}</p>
+      <p><strong>Teléfono:</strong> ${esc(phone || '-')}</p>
       <p><strong>Empresa:</strong> ${esc(company || '-')}</p>
       <p><strong>Servicio:</strong> ${esc(service)}</p>
       <hr/>

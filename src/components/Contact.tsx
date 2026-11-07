@@ -1,5 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Mail, Send, CheckCircle2, MessageCircle, MapPin, Phone, Clock } from 'lucide-react';
+import { getCountries, getCountryCallingCode, isValidPhoneNumber, parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js/min';
+import 'flag-icons/css/flag-icons.min.css';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -15,6 +17,22 @@ import { cn } from '@/lib/utils';
 
 const WHATSAPP_NUMBER = '59169765666';
 const CONTACT_EMAIL = 'proyectos@bonk4code.com';
+const countries = getCountries();
+
+interface CountryOption {
+  code: CountryCode;
+  name: string;
+  callingCode: string;
+}
+
+function CountryFlag({ code }: { code: CountryCode }) {
+  const flagCode = code === 'AC' || code === 'TA' ? 'SH' : code;
+  return <span aria-hidden="true" className={`fi fi-${flagCode.toLowerCase()} shrink-0 rounded-sm`} />;
+}
+
+function isCountryCode(value: string): value is CountryCode {
+  return countries.includes(value as CountryCode);
+}
 
 const services = [
   'Página web',
@@ -35,23 +53,79 @@ const services = [
 interface FormState {
   name: string;
   email: string;
+  phone: string;
   company: string;
   service: string;
   message: string;
 }
 
-const empty: FormState = { name: '', email: '', company: '', service: '', message: '' };
+const empty: FormState = { name: '', email: '', phone: '', company: '', service: '', message: '' };
 
 export default function Contact() {
   const [form, setForm] = useState<FormState>(empty);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [country, setCountry] = useState<CountryCode>('BO');
+  const [countryOptions, setCountryOptions] = useState<CountryOption[]>([]);
+  const [countryHint, setCountryHint] = useState('Detectando país; puedes cambiarlo.');
+  const countryChanged = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+    const countryNames = new Intl.DisplayNames(['es'], { type: 'region' });
+    setCountryOptions(countries
+      .map((code) => ({
+        code,
+        name: countryNames.of(code) || code,
+        callingCode: getCountryCallingCode(code),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'es')));
+    const localeCountry = navigator.languages
+      .map((language) => {
+        try {
+          return new Intl.Locale(language).region;
+        } catch {
+          return undefined;
+        }
+      })
+      .find((region): region is CountryCode => !!region && isCountryCode(region));
+
+    if (localeCountry) setCountry(localeCountry);
+
+    fetch('/api/pais')
+      .then((response) => {
+        if (!response.ok) throw new Error(`Detección de país: ${response.status}`);
+        return response.json();
+      })
+      .then((data: { country: unknown }) => {
+        if (!active || countryChanged.current) return;
+        if (typeof data.country === 'string' && isCountryCode(data.country)) {
+          setCountry(data.country);
+          setCountryHint('País detectado; puedes cambiarlo.');
+        } else {
+          setCountryHint(localeCountry
+            ? 'País sugerido según el idioma del navegador; puedes cambiarlo.'
+            : 'Selecciona tu país.');
+        }
+      })
+      .catch((error) => {
+        console.warn('No se pudo detectar el país:', error);
+        if (active && !countryChanged.current) {
+          setCountryHint(localeCountry
+            ? 'País sugerido según el idioma del navegador; puedes cambiarlo.'
+            : 'Selecciona tu país.');
+        }
+      });
+
+    return () => { active = false; };
+  }, []);
 
   const validate = (data: FormState) => {
     const e: typeof errors = {};
     if (!data.name.trim()) e.name = 'Ingresa tu nombre';
     if (data.name.trim().length < 5) e.name = 'Ingresa tu nombre (mín. 5 caracteres)';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) e.email = 'Email inválido';
+    if (data.phone.trim() && !isValidPhoneNumber(data.phone, country)) e.phone = 'Ingresa un número de teléfono válido';
     if (!data.service) e.service = 'Selecciona un servicio';
     if (data.message.trim().length < 10) e.message = 'Cuéntanos un poco más (mín. 10 caracteres)';
     return e;
@@ -68,7 +142,10 @@ export default function Contact() {
       const res = await fetch('/api/contacto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          phone: form.phone.trim() ? parsePhoneNumberFromString(form.phone, country)?.number : '',
+        }),
       });
       if (!res.ok) throw new Error('Error al enviar');
 
@@ -166,6 +243,63 @@ export default function Contact() {
                 </Field>
               </div>
 
+              <div className="mt-4">
+                <Field label="Teléfono móvil (opcional)" error={errors.phone} htmlFor="contact-phone">
+                  <div className="flex gap-2">
+                    <Select
+                      value={country}
+                      onValueChange={(value) => {
+                        if (isCountryCode(value)) {
+                          countryChanged.current = true;
+                          setCountry(value);
+                          setCountryHint('País seleccionado.');
+                        }
+                      }}
+                    >
+                      <SelectTrigger
+                        aria-label="País y código telefónico"
+                        aria-describedby="country-hint"
+                        className="h-11 w-32 shrink-0 touch-manipulation"
+                      >
+                        <SelectValue>
+                          <span className="inline-flex items-center gap-2">
+                            <CountryFlag code={country} />
+                            <span>+{getCountryCallingCode(country)}</span>
+                          </span>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[60vh]">
+                        {countryOptions.map(({ code, name, callingCode }) => (
+                          <SelectItem key={code} value={code} textValue={`${name} +${callingCode}`} className="py-2.5">
+                            <span className="inline-flex items-center gap-2">
+                              <CountryFlag code={code} />
+                              <span>{name} (+{callingCode})</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      id="contact-phone"
+                      type="tel"
+                      autoComplete="tel-national"
+                      inputMode="tel"
+                      value={form.phone}
+                      onChange={(e) => {
+                        countryChanged.current = true;
+                        setCountryHint('Verifica el país seleccionado.');
+                        setForm({ ...form, phone: e.target.value });
+                      }}
+                      placeholder="Número de móvil"
+                      aria-invalid={!!errors.phone}
+                      aria-describedby={errors.phone ? 'phone-error' : undefined}
+                      className="h-11 min-w-0"
+                    />
+                  </div>
+                  <p id="country-hint" className="mt-1 text-xs text-muted-foreground">{countryHint}</p>
+                </Field>
+              </div>
+
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Field label="Empresa (opcional)">
                   <Input
@@ -245,17 +379,19 @@ export default function Contact() {
 function Field({
   label,
   error,
+  htmlFor,
   children,
 }: {
   label: string;
   error?: string;
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
     <div>
-      <Label className="mb-1.5 block text-sm font-medium">{label}</Label>
+      <Label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium">{label}</Label>
       {children}
-      {error && <p className="mt-1 text-xs font-medium text-destructive">{error}</p>}
+      {error && <p id={htmlFor === 'contact-phone' ? 'phone-error' : undefined} className="mt-1 text-xs font-medium text-destructive">{error}</p>}
     </div>
   );
 }

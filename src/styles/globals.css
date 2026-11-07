@@ -166,6 +166,27 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (max-width: 767px) {
+  body {
+    background-attachment: scroll;
+  }
+
+  body::before,
+  body::after {
+    display: none;
+  }
+
+  .glass,
+  .backdrop-blur {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .glass {
+    background: hsl(var(--card) / 0.96);
+  }
+}
+
 ::selection {
   background: hsl(var(--primary) / 0.25);
 }
