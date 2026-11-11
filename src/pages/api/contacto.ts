@@ -1,4 +1,6 @@
 import type { APIRoute } from 'astro';
+import { createHmac } from 'node:crypto';
+import { isIP } from 'node:net';
 import { isValidPhoneNumber } from 'libphonenumber-js/min';
 
 export const prerender = false; // necesario para que corra en el servidor
@@ -27,13 +29,27 @@ export const POST: APIRoute = async ({ request }) => {
       <p>${esc(message).replace(/\n/g, '<br/>')}</p>
     `;
 
-    const res = await fetch(`${import.meta.env.MAIL_API_URL}/correo/enviarCorreo`, {
+    const url = new URL(`${import.meta.env.MAIL_API_URL}/correo/enviarCorreo`);
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `${import.meta.env.MAIL_API_TOKEN}`,
+    };
+    const clientIp = request.headers.get('cf-connecting-ip')?.trim();
+    if (clientIp) {
+      const secret = import.meta.env.CLIENT_IP_SIGNING_SECRET;
+      if (!isIP(clientIp) || !secret) {
+        throw new Error('IP de Cloudflare inválida o CLIENT_IP_SIGNING_SECRET no configurado');
+      }
+      const timestamp = Date.now().toString();
+      const payload = `${clientIp}\n${timestamp}\nPOST\n${url.pathname}`;
+      headers['X-Original-Client-IP'] = clientIp;
+      headers['X-Client-IP-Timestamp'] = timestamp;
+      headers['X-Client-IP-Signature'] = createHmac('sha256', secret).update(payload).digest('hex');
+    }
+
+    const res = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Ajusta esto a como tu backend espera el token (mira la pestaña Headers/Auth de tu cliente HTTP)
-        Authorization: `${import.meta.env.MAIL_API_TOKEN}`,
-      },
+      headers,
       body: JSON.stringify({
         para: import.meta.env.CONTACT_EMAIL,
         mensaje,
